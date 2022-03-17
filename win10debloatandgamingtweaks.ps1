@@ -31,7 +31,7 @@ $tweaks = @(
 	"Write-ColorOutput", #Utilizing Colors for better warrning messages!
 	"InstallTitusProgs", #REQUIRED FOR OTHER PROGRAM INSTALLS!
 	"InstallMVC", #DaddyMadu install Microsoft Visualstudio required for HPET service!
-	"Install7Zip",
+	#"Install7Zip",
 	#"InstallNotepadplusplus",
 	#"InstallIrfanview",
 	#"InstallVLC",
