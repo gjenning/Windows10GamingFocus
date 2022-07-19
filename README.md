@@ -1,11 +1,19 @@
 # Windows10GamingFocus
-This is A FORK Based On ChrisTitusTech that's foucus on debloat and optimize windows 10 for the lowest latency and best gaming experience, the Ultimate Windows 10 Script is a creation from multiple debloat scripts and gists from github. I also added Chocolatey and other tools to the script that I install on every machine.
+This is A FORK Based On ChrisTitusTech that's foucus on debloat and optimize windows 10/11 for the lowest latency and best gaming experience, the Ultimate Windows 10/11 Script is a creation from multiple debloat scripts and gists from github. I also added Chocolatey and other tools to the script that I install on every machine.
 ```
 Warrning: I am NOT responsible for what you do to your Devices/Systems, so follow these instructions at your own risk. Make sure you know what you're doing, it's best to understand the process rather than just copy and paste commands and such.
 ```
 
 ## Changelog!
 
+16 July 2022
+```
+- add better support for windows 11!
+- Moved taskbar icons to the left.
+- restored windows 10 context menu.
+- disabling windows 11 start menu recomended section.
+- bug fixes and imporvments.
+```
 27 June 2021
 ```
 - Getting Ready for Windows 11 yay!
@@ -19,7 +27,7 @@ Warrning: I am NOT responsible for what you do to your Devices/Systems, so follo
 ```
 - Reverting removal of XBOX as it's required by some Amd system for recording!
 - Removing installation of Sumatra, ChocoGUI, disable Microsoft Software Protection Platform Service, disable Wsappx to Fix 100% Disk Usage, as they cause issue with alot of people.
-- Fixing some issues with code and cleaning it to be prepaired with upcomming windows 10 21h1.
+- Fixing some issues with code and cleaning it to be prepaired with upcomming windows 10/11 21h1.
 ```
 28 Feb 2021
 ```

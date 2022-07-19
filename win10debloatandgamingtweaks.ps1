@@ -28,7 +28,7 @@ $tweaks = @(
 	
 	### Chris Titus Tech Additions
 	"SlowUpdatesTweaks",
-	"Write-ColorOutput", #Utilizing Colors for better warrning messages!
+	"Write-ColorOutput", #Utilizing Colors for better Warning messages!
 	"InstallTitusProgs", #REQUIRED FOR OTHER PROGRAM INSTALLS!
 	"InstallMVC", #DaddyMadu install Microsoft Visualstudio required for HPET service!
 	#"Install7Zip",
@@ -42,11 +42,12 @@ $tweaks = @(
 	# "ChangeDefaultApps", # Removed due to issues with steam and resetting default apps
 	
 	### DaddyMadu Windows Defender Settings! Don't Change Order Just Disable with # If You Don't want it ###
-	"MSIMode",                       #Enable Or Disable MSI Mode For Supported Cards, WARRNING ENABLING MSI MODE MIGHT CRUSH YOUR SYSTEM! IF IT HAPPENS PLEASE RESTORE LAST WORKING SYSTEM RESTORE POINT AND DON'T ENABLE MSI MODE ON THIS SYSTEM AGAIN!
+	"MSIMode",                       #Enable Or Disable MSI Mode For Supported Cards, WARNING ENABLING MSI MODE MIGHT CRUSH YOUR SYSTEM! IF IT HAPPENS PLEASE RESTORE LAST WORKING SYSTEM RESTORE POINT AND DON'T ENABLE MSI MODE ON THIS SYSTEM AGAIN!
 	"DisableNagle",
 	"askDefender",
 	"DorEOneDrive",                  #Option to Install Or Uninstall Microsoft One Drive!
 	"askXBOX",
+	"Windows11Extra",
 	#"askMSPPS",                      #Option to enable or disable Microsoft Software Protection Platform Service” Causing High CPU Usage
 	#"askMSWSAPPX",                   #Option to enable or disable Wsappx to Fix 100% Disk Usage in Windows 10 in older systems
 
@@ -265,7 +266,7 @@ function Show-Choco-Menu {
 Function SlowUpdatesTweaks {
 	Write-Output "Improving Windows Update to delay Feature updates and only install Security Updates"
 	### Fix Windows Update to delay feature updates and only update at certain times
-	Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate" -Name "BranchReadinessLevel" -Type DWord -Value 16 -ErrorAction SilentlyContinue | Out-Null
+	Remove-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate" -Name "BranchReadinessLevel" -ErrorAction SilentlyContinue | Out-Null
 	Remove-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings" -Name "BranchReadinessLevel" -ErrorAction SilentlyContinue | Out-Null
 	Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate" -Name "DeferFeatureUpdates" -Type DWord -Value 1 -ErrorAction SilentlyContinue | Out-Null
 	Remove-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings" -Name "DeferFeatureUpdates" -ErrorAction SilentlyContinue | Out-Null
@@ -401,7 +402,7 @@ Function askXBOX {
  {
     cls
     Write-Host "================ Do You Want To Disable XBOX features and all related APPS? ================"
-	Write-ColorOutput "WARRNING: REMOVING XBOX APPS will make Win+G do nothing!" Red
+	Write-ColorOutput "WARNING: REMOVING XBOX APPS will make Win+G do nothing!" Red
     Write-Host "Y: Press 'Y' to Disable XBOX features."
     Write-Host "N: Press 'N' to Enable XBOX features."
     Write-Host "Q: Press 'Q' to Skip this."
@@ -446,7 +447,7 @@ Function askXBOX {
 	
 }
 
-#Enable Or Disable MSI Mode For Supported Cards, WARRNING ENABLING MSI MODE MIGHT CRUSH YOUR SYSTEM! IF IT HAPPENS PLEASE RESTORE LAST WORKING SYSTEM RESTORE POINT AND DON'T ENABLE MSI MODE ON THIS SYSTEM AGAIN!
+#Enable Or Disable MSI Mode For Supported Cards, WARNING ENABLING MSI MODE MIGHT CRUSH YOUR SYSTEM! IF IT HAPPENS PLEASE RESTORE LAST WORKING SYSTEM RESTORE POINT AND DON'T ENABLE MSI MODE ON THIS SYSTEM AGAIN!
 Function MSIMode {
 $errpref = $ErrorActionPreference #save actual preference
 $ErrorActionPreference = "silentlycontinue"
@@ -1030,7 +1031,7 @@ Function askMSPPS {
  {
     cls
     Write-Host "================ Do you have High CPU Usage from Microsoft Software Protection Platform Service? ================"
-	Write-ColorOutput "Warrning: Windows Default is ENABLED, if you Disabled it, Windows 10/Office will show not activated state but you can use it as normal" Red
+	Write-ColorOutput "WARNING: Windows Default is ENABLED, if you Disabled it, Windows 10/Office will show not activated state but you can use it as normal" Red
     Write-Host "Y: Press 'Y' to Disable this."
     Write-Host "N: Press 'N' to Enable this."
 	Write-Host "Q: Press 'Q' to stop the entire script."
@@ -1063,7 +1064,7 @@ Function askMSWSAPPX {
  {
     cls
     Write-Host "================ Do you want to disable Microsoft Store and Disable WSAPPX Service? ================"
-	Write-ColorOutput "Warrning: Windows Default is ENABLED, if you Disabled it and wanted to enable it again and restore Microsoft Store Please run the script twise and choose N" Red
+	Write-ColorOutput "WARNING: Windows Default is ENABLED, if you Disabled it and wanted to enable it again and restore Microsoft Store Please run the script twise and choose N" Red
     Write-Host "Y: Press 'Y' to Disable this."
     Write-Host "N: Press 'N' to Enable this."
 	Write-Host "Q: Press 'Q' to stop the entire script."
@@ -2495,7 +2496,10 @@ Function InstallMediaPlayer {
 # Uninstall Internet Explorer
 Function UninstallInternetExplorer {
 	Write-Output "Uninstalling Internet Explorer..."
+	If ([System.Environment]::OSVersion.Version.Build -ge 22000) {
+	} Else {
 	Disable-WindowsOptionalFeature -Online -FeatureName "Internet-Explorer-Optional-$env:PROCESSOR_ARCHITECTURE" -NoRestart -WarningAction SilentlyContinue | Out-Null
+	}
 }
 
 # Install Internet Explorer
@@ -2662,6 +2666,17 @@ Function UnpinStartMenuTiles {
 	Write-Output "Unpinning all Start Menu tiles..."
 	$errpref = $ErrorActionPreference #save actual preference
         $ErrorActionPreference = "silentlycontinue"
+		If ([System.Environment]::OSVersion.Version.Build -ge 22000) {
+		Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "NoRecentDocsHistory" -Type DWord -Value 0 | Out-Null -ErrorAction SilentlyContinue
+		Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "Start_TrackDocs" -Type DWord -Value 0 | Out-Null -ErrorAction SilentlyContinue
+		Remove-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "NoStartMenuMorePrograms" | Out-Null -ErrorAction SilentlyContinue
+		Remove-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "NoStartMenuMorePrograms" | Out-Null -ErrorAction SilentlyContinue
+		Remove-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Explorer" -Name "LockedStartLayout" | Out-Null -ErrorAction SilentlyContinue
+		Remove-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Explorer" -Name "StartLayoutFile" | Out-Null -ErrorAction SilentlyContinue
+		Remove-ItemProperty -Path "HKCU:\SOFTWARE\Policies\Microsoft\Windows\Explorer" -Name "LockedStartLayout" | Out-Null -ErrorAction SilentlyContinue
+		Remove-ItemProperty -Path "HKCU:\SOFTWARE\Policies\Microsoft\Windows\Explorer" -Name "StartLayoutFile" | Out-Null -ErrorAction SilentlyContinue
+		Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "Start_Layout" -Type DWord -Value 1 | Out-Null -ErrorAction SilentlyContinue
+	} Else {
 	Invoke-WebRequest -Uri "https://git.io/JL54C" -OutFile "$env:UserProfile\StartLayout.xml" -ErrorAction SilentlyContinue
 	Import-StartLayout -layoutpath "$env:UserProfile\StartLayout.xml" -MountPath "$env:SystemDrive\"
 	Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Explorer" -Name "LockedStartLayout" -Type DWord -Value 1 | Out-Null -ErrorAction SilentlyContinue
@@ -2684,6 +2699,7 @@ Function UnpinStartMenuTiles {
         Name = $Value
         Value = $Key.GetValue($Value)
         Type = $Key.GetValueKind($Value)
+		}
       }
     }
   }
@@ -2699,6 +2715,19 @@ Stop-Process -name explorer | Out-Null
 ##########
 # DaddyMadu Quality Of Life Tweaks
 ##########
+# Windows 11 Extra Tweaks
+function Windows11Extra {
+	If ([System.Environment]::OSVersion.Version.Build -ge 22000) {
+	        Write-Output "Restoring windows 10 context menu and disabling start menu recommended section..."
+		New-Item -Path "HKCU:\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32" -ErrorAction SilentlyContinue | Out-Null #context menu setup
+		Set-ItemProperty -Path "HKCU:\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32" -Name "(Default)" -Type String -Value "" #restore windows 10 context menu
+		Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarAl" -Type DWord -Value 0 #set taskbar icons to the left
+		Get-appxpackage -all *shellexperience* -packagetype bundle |% {add-appxpackage -register -disabledevelopmentmode ($_.installlocation + '\appxmetadata\appxbundlemanifest.xml')}
+		Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarDa" -Type DWord -Value 0 #disable widget icon from taskbar
+		Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarMn" -Type DWord -Value 0 #disable chat icon from taskbar
+		Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Explorer" -Name "HideRecentlyAddedApps" -Type DWord -Value 1 #Disable start menu RecentlyAddedApps
+	}
+}
 # Enable Quality Of Life Tweaks
 Function QOL {
        	Write-Output "Enabling DaddyMadu Quality of Life Tweaks..."
@@ -2708,7 +2737,11 @@ Function QOL {
 	Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\UserProfileEngagement" -Name "ScoobeSystemSettingEnabled" -Type DWord -Value 0 | Out-Null -ErrorAction SilentlyContinue #disable annoying Get even more out of Windows
 	Set-ItemProperty -Path "HKCU:\Control Panel\Accessibility" -Name "DynamicScrollbars" -Type DWord -Value 0 #disable Hide Scroll bars
 	Set-ItemProperty -Path "HKCU:\Control Panel\Desktop" -Name "SmoothScroll" -Type DWord -Value 0 #disable smooth scrolling 
+	If ([System.Environment]::OSVersion.Version.Build -ge 22000) {
 	Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "NoInstrumentation" -Type DWord -Value 1 #disable microsoft usertracking
+	} Else {
+	Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "NoInstrumentation" -Type DWord -Value 1 #disable microsoft usertracking
+	}
 	Remove-ItemProperty -Path "HKCU:\Software\Policies\Microsoft\Windows\Explorer" -Name "TaskbarNoMultimon" -ErrorAction SilentlyContinue
 	Remove-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Explorer" -Name "TaskbarNoMultimon" -ErrorAction SilentlyContinue
 	Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "MMTaskbarMode" -Type DWord -Value 2 #Show taskbar buttons only on taskbar where window is open
