@@ -1743,6 +1743,8 @@ Function EnableStickyKeys {
 
 # Show Task Manager details - Applicable to 1607 and later - Although this functionality exist even in earlier versions, the Task Manager's behavior is different there and is not compatible with this tweak
 Function ShowTaskManagerDetails {
+If ([System.Environment]::OSVersion.Version.Build -ge 22000) {
+} Else {
 	Write-Output "Showing task manager details..."
 	$taskmgr = Start-Process -WindowStyle Hidden -FilePath taskmgr.exe -PassThru
 	Do {
@@ -1752,6 +1754,7 @@ Function ShowTaskManagerDetails {
 	Stop-Process $taskmgr
 	$preferences.Preferences[28] = 0
 	Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\TaskManager" -Name "Preferences" -Type Binary -Value $preferences.Preferences
+  }
 }
 
 # Hide Task Manager details
