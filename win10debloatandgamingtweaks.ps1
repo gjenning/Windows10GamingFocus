@@ -7,7 +7,7 @@
 #
 #	Addition: One command to rule them all, One command to find it, and One command to Run it! 
 #
-#     > powershell -nop -c "iex(New-Object Net.WebClient).DownloadString('http://tweaks.daddymadu.gg')"
+#     > powershell -nop -c "iex(New-Object Net.WebClient).DownloadString('http://madu.gg/ps')"
 #
 #     Changelogs Moved to ReadMe File for better mangement. 
 #
@@ -19,7 +19,12 @@ Write-Host "Please DISABLE your ANTIVIRUS to prevent any issues and PRESS any KE
 $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
 New-PSDrive -Name HKCR -PSProvider Registry -Root HKEY_CLASSES_ROOT | Out-Null
 New-PSDrive -Name HKU -PSProvider Registry -Root HKEY_USERS | Out-Null
-cls
+$currentexename = (([Diagnostics.Process]::GetCurrentProcess().ProcessName) + '.exe')
+	if ($currentexename -eq "pwsh.exe") {
+		Start-Process Powershell -Argumentlist '-ExecutionPolicy bypass -NoProfile -command "irm "https://github.com/DaddyMadu/Windows10GamingFocus/raw/master/win10debloatandgamingtweaks.ps1" | iex"' -Verb RunAs
+		exit
+	}
+Clear-Host
 # Default preset
 $tweaks = @(
 	### Require administrator privileges ###
@@ -43,7 +48,6 @@ $tweaks = @(
 	
 	### DaddyMadu Windows Defender Settings! Don't Change Order Just Disable with # If You Don't want it ###
 	"MSIMode",                       #Enable Or Disable MSI Mode For Supported Cards, WARNING ENABLING MSI MODE MIGHT CRUSH YOUR SYSTEM! IF IT HAPPENS PLEASE RESTORE LAST WORKING SYSTEM RESTORE POINT AND DON'T ENABLE MSI MODE ON THIS SYSTEM AGAIN!
-	"DisableNagle",
 	"askDefender",
 	"DorEOneDrive",                  #Option to Install Or Uninstall Microsoft One Drive!
 	"askXBOX",
@@ -222,7 +226,9 @@ $tweaks = @(
 	"StophighDPC",
 	"NvidiaTweaks",
 	"AMDGPUTweaks",
+ 	"NetworkAdapterRSS",
 	"NetworkOptimizations",
+ 	"DisableNagle",
 	"RemoveEdit3D",
 	"FixURLext",  # fix issue with games shortcut that created by games lunchers turned white!
 	"UltimateCleaner",
@@ -247,7 +253,7 @@ function Show-Choco-Menu {
    
  do
  {
-    cls
+    Clear-Host
     Write-Host "================ $Title ================"
     Write-Host "Y: Press 'Y' to do this."
     Write-Host "2: Press 'N' to skip this."
@@ -316,7 +322,7 @@ function Write-ColorOutput
     }
 
     # Always write (if we want just a NewLine)
-    if($Object -eq $null)
+    if($null -eq $Object)
     {
         $Object = ""
     }
@@ -337,7 +343,7 @@ function Write-ColorOutput
 
 Function InstallTitusProgs {
 	Write-Output "Installing Chocolatey"
-	Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+	Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 	choco install chocolatey-core.extension -y
 	Write-Output "Running O&O Shutup with Recommended Settings"
 	Import-Module BitsTransfer
@@ -378,7 +384,7 @@ Function InstallIrfanview {
 }
 
 Function InstallChocoUpdates {
-        cls
+        Clear-Host
 	choco upgrade all -y
 }
 
@@ -393,14 +399,14 @@ Function ChangeDefaultApps {
 Function ApplyPCOptimizations {
         Write-Output "Applying PC Optimizations..."
 	Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" -Name "SystemResponsiveness" -Type DWord -Value 0
-	Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" -Name "NetworkThrottlingIndex" -Type DWord -Value 4294967295
+	Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" -Name "NetworkThrottlingIndex" -Type DWord -Value 10
  }
 
 #Enable or Disable and remove xbox related apps
 Function askXBOX {
 	do
  {
-    cls
+    Clear-Host
     Write-Host "================ Do You Want To Disable XBOX features and all related APPS? ================"
 	Write-ColorOutput "WARNING: REMOVING XBOX APPS will make Win+G do nothing!" Red
     Write-Host "Y: Press 'Y' to Disable XBOX features."
@@ -424,21 +430,21 @@ Function askXBOX {
 	}
 	Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\GameDVR" -Name "AllowGameDVR" -Type DWord -Value 0
         $ErrorActionPreference = $errpref #restore previous preference
-	cls
+	Clear-Host
 	}
     'n' {
         $errpref = $ErrorActionPreference #save actual preference
         $ErrorActionPreference = "silentlycontinue"
         Write-Output "Enabling Xbox features..."
-	Get-AppxPackage -AllUsers "Microsoft.XboxApp" | ForEach {Add-AppxPackage -DisableDevelopmentMode -Register "$($_.InstallLocation)\AppXManifest.xml"}
-	Get-AppxPackage -AllUsers "Microsoft.XboxIdentityProvider" | ForEach {Add-AppxPackage -DisableDevelopmentMode -Register "$($_.InstallLocation)\AppXManifest.xml"}
-	Get-AppxPackage -AllUsers "Microsoft.XboxSpeechToTextOverlay" | ForEach {Add-AppxPackage -DisableDevelopmentMode -Register "$($_.InstallLocation)\AppXManifest.xml"}
-	Get-AppxPackage -AllUsers "Microsoft.XboxGameOverlay" | ForEach {Add-AppxPackage -DisableDevelopmentMode -Register "$($_.InstallLocation)\AppXManifest.xml"}
-	Get-AppxPackage -AllUsers "Microsoft.Xbox.TCUI" | ForEach {Add-AppxPackage -DisableDevelopmentMode -Register "$($_.InstallLocation)\AppXManifest.xml"}
+	Get-AppxPackage -AllUsers "Microsoft.XboxApp" | ForEach-Object {Add-AppxPackage -DisableDevelopmentMode -Register "$($_.InstallLocation)\AppXManifest.xml"}
+	Get-AppxPackage -AllUsers "Microsoft.XboxIdentityProvider" | ForEach-Object {Add-AppxPackage -DisableDevelopmentMode -Register "$($_.InstallLocation)\AppXManifest.xml"}
+	Get-AppxPackage -AllUsers "Microsoft.XboxSpeechToTextOverlay" | ForEach-Object {Add-AppxPackage -DisableDevelopmentMode -Register "$($_.InstallLocation)\AppXManifest.xml"}
+	Get-AppxPackage -AllUsers "Microsoft.XboxGameOverlay" | ForEach-Object {Add-AppxPackage -DisableDevelopmentMode -Register "$($_.InstallLocation)\AppXManifest.xml"}
+	Get-AppxPackage -AllUsers "Microsoft.Xbox.TCUI" | ForEach-Object {Add-AppxPackage -DisableDevelopmentMode -Register "$($_.InstallLocation)\AppXManifest.xml"}
 	Set-ItemProperty -Path "HKCU:\System\GameConfigStore" -Name "GameDVR_Enabled" -Type DWord -Value 1
 	Remove-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\GameDVR" -Name "AllowGameDVR" -ErrorAction SilentlyContinue
         $ErrorActionPreference = $errpref #restore previous preference
-	cls
+	Clear-Host
 		}
     'q' { }
     }
@@ -624,7 +630,7 @@ Function EnableActivityHistory {
 # Disable Background application access - ie. if apps can download or update when they aren't used - Cortana is excluded as its inclusion breaks start menu search
 Function DisableBackgroundApps {
 	Write-Output "Disabling Background application access..."
-	Get-ChildItem -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications" -Exclude "Microsoft.Windows.Cortana*" | ForEach {
+	Get-ChildItem -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications" -Exclude "Microsoft.Windows.Cortana*" | ForEach-Object {
 		Set-ItemProperty -Path $_.PsPath -Name "Disabled" -Type DWord -Value 1
 		Set-ItemProperty -Path $_.PsPath -Name "DisabledByUser" -Type DWord -Value 1
 	}
@@ -633,7 +639,7 @@ Function DisableBackgroundApps {
 # Enable Background application access
 Function EnableBackgroundApps {
 	Write-Output "Enabling Background application access..."
-	Get-ChildItem -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications" | ForEach {
+	Get-ChildItem -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications" | ForEach-Object {
 		Remove-ItemProperty -Path $_.PsPath -Name "Disabled" -ErrorAction SilentlyContinue
 		Remove-ItemProperty -Path $_.PsPath -Name "DisabledByUser" -ErrorAction SilentlyContinue
 	}
@@ -962,7 +968,7 @@ Function askDefender {
 	
 	do
  {
-    cls
+    Clear-Host
     Write-Host "================ Do you want to Disable Microsoft Windows Defender? ================"
     Write-Host "Y: Press 'Y' to Disable Microsoft Windows Defender."
     Write-Host "N: Press 'N' to Enable Microsoft Windows Defender."
@@ -996,7 +1002,7 @@ Function askDefender {
     Disable-ScheduledTask -TaskName "\Microsoft\Windows\Windows Defender\Windows Defender Cleanup" | Out-Null
     Disable-ScheduledTask -TaskName "\Microsoft\Windows\Windows Defender\Windows Defender Scheduled Scan" | Out-Null
     Disable-ScheduledTask -TaskName "\Microsoft\Windows\Windows Defender\Windows Defender Verification" | Out-Null
-    cls
+    Clear-Host
 	}
     'n' {
         Write-Output "Enabling Microsoft Windows Defender and related Processes..."
@@ -1015,7 +1021,7 @@ Function askDefender {
     Enable-ScheduledTask -TaskName "\Microsoft\Windows\Windows Defender\Windows Defender Scheduled Scan" | Out-Null
     Enable-ScheduledTask -TaskName "\Microsoft\Windows\Windows Defender\Windows Defender Verification" | Out-Null
 	Set-MpPreference -EnableControlledFolderAccess Disabled -ErrorAction SilentlyContinue
-	cls
+	Clear-Host
 		}
     'q' {  }
     }
@@ -1029,7 +1035,7 @@ Function askMSPPS {
 	
 	do
  {
-    cls
+    Clear-Host
     Write-Host "================ Do you have High CPU Usage from Microsoft Software Protection Platform Service? ================"
 	Write-ColorOutput "WARNING: Windows Default is ENABLED, if you Disabled it, Windows 10/Office will show not activated state but you can use it as normal" Red
     Write-Host "Y: Press 'Y' to Disable this."
@@ -1042,13 +1048,13 @@ Function askMSPPS {
 	    Write-Output "Disabling Microsoft Software Protection Platform Service and related Processes..."
 		Disable-ScheduledTask -TaskName "\Microsoft\Windows\SoftwareProtectionPlatform\SvcRestartTask" | Out-Null
 		Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\sppsvc" -Name "Start" -Type DWord -Value 4 -ErrorAction SilentlyContinue
-		cls
+		Clear-Host
 	}
     'n' {
         Write-Output "Enabling Microsoft Software Protection Platform Service and related Processes..."
 	    Enable-ScheduledTask -TaskName "\Microsoft\Windows\SoftwareProtectionPlatform\SvcRestartTask" | Out-Null
 		Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\sppsvc" -Name "Start" -Type DWord -Value 2 -ErrorAction SilentlyContinue
-		cls
+		Clear-Host
 		}
     'q' { Exit  }
     }
@@ -1062,7 +1068,7 @@ Function askMSWSAPPX {
 	
 	do
  {
-    cls
+    Clear-Host
     Write-Host "================ Do you want to disable Microsoft Store and Disable WSAPPX Service? ================"
 	Write-ColorOutput "WARNING: Windows Default is ENABLED, if you Disabled it and wanted to enable it again and restore Microsoft Store Please run the script twise and choose N" Red
     Write-Host "Y: Press 'Y' to Disable this."
@@ -1081,7 +1087,7 @@ Function askMSWSAPPX {
 		Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\WindowsStore" -Name "DisableStoreApps" -Type DWord -Value 1 -ErrorAction SilentlyContinue
 		Set-ItemProperty -Path "HKLM:\SYSTEM\ControlSet001\Services\AppXSvc" -Name "Start" -Type DWord -Value 4 -ErrorAction SilentlyContinue
 		$ErrorActionPreference = $errpref #restore previous preference
-		cls
+		Clear-Host
 	}
     'n' {
         Write-Output "Enabling Microsoft Store and WSAPPX Service..."
@@ -1090,10 +1096,10 @@ Function askMSWSAPPX {
 		Remove-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\WindowsStore" -Name "DisableStoreApps" -ErrorAction SilentlyContinue
 		Remove-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\WindowsStore" -Force | Out-Null
 		Set-ItemProperty -Path "HKLM:\SYSTEM\ControlSet001\Services\AppXSvc" -Name "Start" -Type DWord -Value 3 -ErrorAction SilentlyContinue
-		Get-AppxPackage -AllUsers "Microsoft.DesktopAppInstaller" | ForEach {Add-AppxPackage -DisableDevelopmentMode -Register "$($_.InstallLocation)\AppXManifest.xml"} -ErrorAction SilentlyContinue
-		Get-AppxPackage -AllUsers "Microsoft.WindowsStore" | ForEach {Add-AppxPackage -DisableDevelopmentMode -Register "$($_.InstallLocation)\AppXManifest.xml"} -ErrorAction SilentlyContinue
+		Get-AppxPackage -AllUsers "Microsoft.DesktopAppInstaller" | ForEach-Object {Add-AppxPackage -DisableDevelopmentMode -Register "$($_.InstallLocation)\AppXManifest.xml"} -ErrorAction SilentlyContinue
+		Get-AppxPackage -AllUsers "Microsoft.WindowsStore" | ForEach-Object {Add-AppxPackage -DisableDevelopmentMode -Register "$($_.InstallLocation)\AppXManifest.xml"} -ErrorAction SilentlyContinue
 		$ErrorActionPreference = $errpref #restore previous preference
-		cls
+		Clear-Host
 		}
     'q' { Exit  }
     }
@@ -1550,7 +1556,7 @@ Function PowerThrottlingOff {
 #Setting Processor scheduling.
 Function Win32PrioritySeparation {
 	Write-Output "Setting Processor scheduling..."
-	Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl" -Name "Win32PrioritySeparation" -Type DWord -Value 0x00000026
+	Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl" -Name "Win32PrioritySeparation" -Type DWord -Value 0x00000018
 }
 
 #Disabling aero shake.
@@ -1984,7 +1990,7 @@ Function AddENKeyboard {
 Function RemoveENKeyboard {
 	Write-Output "Removing secondary en-US keyboard..."
 	$langs = Get-WinUserLanguageList
-	Set-WinUserLanguageList ($langs | ? {$_.LanguageTag -ne "en-US"}) -Force
+	Set-WinUserLanguageList ($langs | Where-Object {$_.LanguageTag -ne "en-US"}) -Force
 }
 
 # Enable NumLock after startup
@@ -2396,7 +2402,7 @@ Function DorEOneDrive {
 	
 	do
  {
-    cls
+    Clear-Host
     Write-Host "================ Do you want to Disable Microsoft OneDrive? ================"
     Write-Host "Y: Press 'Y' to Disable OneDrive."
     Write-Host "N: Press 'N' to Enable OneDrive."
@@ -2439,7 +2445,7 @@ Function DorEOneDrive {
 	Remove-Item -Force -ErrorAction SilentlyContinue "$env:userprofile\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\OneDrive.lnk"
 	Get-ScheduledTask -TaskPath '\' -TaskName 'OneDrive*' -ea SilentlyContinue | Unregister-ScheduledTask -Confirm:$false
 	$ErrorActionPreference = $errpref #restore previous preference
-	cls
+	Clear-Host
 	}
     'n' {
         Write-Output "Enabling Microsoft OneDrive and related Processes..."
@@ -2455,7 +2461,7 @@ Function DorEOneDrive {
 	}
 	Start-Process $onedrive -NoNewWindow
 	$ErrorActionPreference = $errpref #restore previous preference
-	cls
+	Clear-Host
 		}
     'q' {  }
     }
@@ -2709,8 +2715,8 @@ Function UnpinStartMenuTiles {
 }
 
 $YourInputStart = "02,00,00,00,e6,d9,21,ac,f8,e0,d6,01,00,00,00,00,43,42,01,00,c2,14,01,cb,32,0a,03,05,ce,ab,d3,e9,02,24,da,f4,03,44,c3,8a,01,66,82,e5,8b,b1,ae,fd,fd,bb,3c,00,05,a0,8f,fc,c1,03,24,8a,d0,03,44,80,99,01,66,b0,b5,99,dc,cd,b0,97,de,4d,00,05,86,91,cc,93,05,24,aa,a3,01,44,c3,84,01,66,9f,f7,9d,b1,87,cb,d1,ac,d4,01,00,c2,3c,01,c5,5a,01,00"
-$hexifiedStart = $YourInputStart.Split(',') | % { "0x$_"}
-ls -r "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\CloudStore\Store\Cache\DefaultAccount\" | get-itemproperty2 | where { $_ -like '*windows.data.unifiedtile.startglobalproperties*' } | set-itemproperty -value (([byte[]]$hexifiedStart))
+$hexifiedStart = $YourInputStart.Split(',') | ForEach-Object { "0x$_"}
+Get-ChildItem -r "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\CloudStore\Store\Cache\DefaultAccount\" | get-itemproperty2 | Where-Object { $_ -like '*windows.data.unifiedtile.startglobalproperties*' } | set-itemproperty -value (([byte[]]$hexifiedStart))
 Stop-Process -name explorer | Out-Null
 	$ErrorActionPreference = $errpref #restore previous preference
 }
@@ -2725,10 +2731,13 @@ function Windows11Extra {
 		New-Item -Path "HKCU:\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32" -ErrorAction SilentlyContinue | Out-Null #context menu setup
 		reg add "HKCU\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32" /f /ve
 		Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarAl" -Type DWord -Value 0 #set taskbar icons to the left
-		Get-appxpackage -all *shellexperience* -packagetype bundle |% {add-appxpackage -register -disabledevelopmentmode ($_.installlocation + '\appxmetadata\appxbundlemanifest.xml')}
+		Get-appxpackage -all *shellexperience* -packagetype bundle |ForEach-Object {add-appxpackage -register -disabledevelopmentmode ($_.installlocation + '\appxmetadata\appxbundlemanifest.xml')}
 		Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarDa" -Type DWord -Value 0 #disable widget icon from taskbar
 		Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarMn" -Type DWord -Value 0 #disable chat icon from taskbar
 		Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Explorer" -Name "HideRecentlyAddedApps" -Type DWord -Value 1 #Disable start menu RecentlyAddedApps
+    		Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\kernel" -Name "ThreadDpcEnable" -Type DWord -Value 0 | Out-Null -ErrorAction SilentlyContinue
+      		Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\kernel" -Name "GlobalTimerResolutionRequests" -Type DWord -Value 1 | Out-Null -ErrorAction SilentlyContinue
+		Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\kernel" -Name "UnlimitDpcQueue" -Type DWord -Value 1 | Out-Null -ErrorAction SilentlyContinue
 	}
 }
 # Enable Quality Of Life Tweaks
@@ -2757,6 +2766,8 @@ Function QOL {
 
 #Disable Fullscreen Optimizations
 Function FullscreenOptimizationFIX {
+	$errpref = $ErrorActionPreference #save actual preference
+        $ErrorActionPreference = "silentlycontinue"
 	Write-Output "Disabling Full ScreenOptimization..."
 	Set-ItemProperty -Path "HKCU:\System\GameConfigStore" -Name "GameDVR_FSEBehaviorMode" -Type DWord -Value 2
 	Set-ItemProperty -Path "HKCU:\System\GameConfigStore" -Name "GameDVR_HonorUserFSEBehaviorMode" -Type DWord -Value 1
@@ -2765,6 +2776,12 @@ Function FullscreenOptimizationFIX {
 	Set-ItemProperty -Path "HKCU:\System\GameConfigStore" -Name "GameDVR_EFSEFeatureFlags" -Type DWord -Value 0
 	Set-ItemProperty -Path "HKCU:\System\GameConfigStore" -Name "GameDVR_DSEBehavior" -Type DWord -Value 2
 	Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\GameDVR" -Name "AppCaptureEnabled" -Type DWord -Value 0
+ 	Set-ItemProperty -Path "HKCU:\Software\Microsoft\DirectX\GraphicsSettings" -Name "SwapEffectUpgradeCache" -Type DWord -Value 1
+  	Set-ItemProperty -Path "HKCU:\Software\Microsoft\DirectX\UserGpuPreferences" -Name "DirectXUserGlobalSettings" -Type String -Value 'SwapEffectUpgradeEnable=1;'
+   	Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SoftwareProtectionPlatform" -Name "InactivityShutdownDelay" -Type DWord -Value 4294967295
+    	Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\Dwm" -Name "OverlayTestMode" -Type DWord -Value 5
+   	Disable-MMAgent -MemoryCompression | Out-Null
+    	$ErrorActionPreference = $errpref #restore previous preference
 }
 
 #Game Optimizations Priority Tweaks -Type String -Value "Deny"
@@ -2775,6 +2792,17 @@ Function GameOptimizationFIX {
 	Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games" -Name "Scheduling Category" -Type String -Value "High"
 	Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games" -Name "SFIO Priority" -Type String -Value "High"
 	Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl" -Name "IRQ8Priority" -Type DWord -Value 1
+  	reg ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\csrss.exe\PerfOptions" /v CpuPriorityClass /t REG_DWORD /d 4 /f | Out-Null
+   	reg ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\csrss.exe\PerfOptions" /v IoPriority /t REG_DWORD /d 3 /f | Out-Null
+    	fsutil behavior set disable8dot3 1
+     	fsutil behavior set disablelastaccess 1
+    	$PlatformCheck = (Get-Computerinfo).CsPCSystemType
+     if ($PlatformCheck -eq "Desktop") {
+     Write-Output "Platform is $PlatformCheck Disabling power saving options on all connected devices..."
+     Get-WmiObject MSPower_DeviceEnable -Namespace root\wmi | ForEach-Object { $_.enable = $false; $_.psbase.put(); } | Out-Null
+     } else {
+     Write-Output "Platform is $PlatformCheck No power saving edits has been made."
+     }
 }
 
 #Forcing Raw Mouse Input
@@ -2821,8 +2849,8 @@ Write-Output "Windows screen scale is Detected as 100%, Applying Mouse Fix for i
 $YourInputX = "00,00,00,00,00,00,00,00,C0,CC,0C,00,00,00,00,00,80,99,19,00,00,00,00,00,40,66,26,00,00,00,00,00,00,33,33,00,00,00,00,00"
 $YourInputY = "00,00,00,00,00,00,00,00,00,00,38,00,00,00,00,00,00,00,70,00,00,00,00,00,00,00,A8,00,00,00,00,00,00,00,E0,00,00,00,00,00"
 $RegPath   = 'HKCU:\Control Panel\Mouse'
-$hexifiedX = $YourInputX.Split(',') | % { "0x$_"}
-$hexifiedY = $YourInputY.Split(',') | % { "0x$_"}
+$hexifiedX = $YourInputX.Split(',') | ForEach-Object { "0x$_"}
+$hexifiedY = $YourInputY.Split(',') | ForEach-Object { "0x$_"}
 Set-ItemProperty -Path "$RegPath" -Name "SmoothMouseXCurve" -Type Binary -Value (([byte[]]$hexifiedX))
 Set-ItemProperty -Path "$RegPath" -Name "SmoothMouseYCurve" -Type Binary -Value (([byte[]]$hexifiedY))
 } elseif($checkscreenscale -eq "125") {
@@ -2830,8 +2858,8 @@ Write-Output "Windows screen scale is Detected as 125%, Applying Mouse Fix for i
 $YourInputX = "00,00,00,00,00,00,00,00,00,00,10,00,00,00,00,00,00,00,20,00,00,00,00,00,00,00,30,00,00,00,00,00,00,00,40,00,00,00,00,00"
 $YourInputY = "00,00,00,00,00,00,00,00,00,00,38,00,00,00,00,00,00,00,70,00,00,00,00,00,00,00,A8,00,00,00,00,00,00,00,E0,00,00,00,00,00"
 $RegPath   = 'HKCU:\Control Panel\Mouse'
-$hexifiedX = $YourInputX.Split(',') | % { "0x$_"}
-$hexifiedY = $YourInputY.Split(',') | % { "0x$_"}
+$hexifiedX = $YourInputX.Split(',') | ForEach-Object { "0x$_"}
+$hexifiedY = $YourInputY.Split(',') | ForEach-Object { "0x$_"}
 Set-ItemProperty -Path "$RegPath" -Name "SmoothMouseXCurve" -Type Binary -Value (([byte[]]$hexifiedX))
 Set-ItemProperty -Path "$RegPath" -Name "SmoothMouseYCurve" -Type Binary -Value (([byte[]]$hexifiedY))
 } elseif($checkscreenscale -eq "150") {
@@ -2839,8 +2867,8 @@ Write-Output "Windows screen scale is Detected as 150%, Applying Mouse Fix for i
 $YourInputX = "00,00,00,00,00,00,00,00,30,33,13,00,00,00,00,00,60,66,26,00,00,00,00,00,90,99,39,00,00,00,00,00,C0,CC,4C,00,00,00,00,00"
 $YourInputY = "00,00,00,00,00,00,00,00,00,00,38,00,00,00,00,00,00,00,70,00,00,00,00,00,00,00,A8,00,00,00,00,00,00,00,E0,00,00,00,00,00"
 $RegPath   = 'HKCU:\Control Panel\Mouse'
-$hexifiedX = $YourInputX.Split(',') | % { "0x$_"}
-$hexifiedY = $YourInputY.Split(',') | % { "0x$_"}
+$hexifiedX = $YourInputX.Split(',') | ForEach-Object { "0x$_"}
+$hexifiedY = $YourInputY.Split(',') | ForEach-Object { "0x$_"}
 Set-ItemProperty -Path "$RegPath" -Name "SmoothMouseXCurve" -Type Binary -Value (([byte[]]$hexifiedX))
 Set-ItemProperty -Path "$RegPath" -Name "SmoothMouseYCurve" -Type Binary -Value (([byte[]]$hexifiedY))
 } elseif($checkscreenscale -eq "175") {
@@ -2848,8 +2876,8 @@ Write-Output "Windows screen scale is Detected as 175%, Applying Mouse Fix for i
 $YourInputX = "00,00,00,00,00,00,00,00,60,66,16,00,00,00,00,00,C0,CC,2C,00,00,00,00,00,20,33,43,00,00,00,00,00,80,99,59,00,00,00,00,00"
 $YourInputY = "00,00,00,00,00,00,00,00,00,00,38,00,00,00,00,00,00,00,70,00,00,00,00,00,00,00,A8,00,00,00,00,00,00,00,E0,00,00,00,00,00"
 $RegPath   = 'HKCU:\Control Panel\Mouse'
-$hexifiedX = $YourInputX.Split(',') | % { "0x$_"}
-$hexifiedY = $YourInputY.Split(',') | % { "0x$_"}
+$hexifiedX = $YourInputX.Split(',') | ForEach-Object { "0x$_"}
+$hexifiedY = $YourInputY.Split(',') | ForEach-Object { "0x$_"}
 Set-ItemProperty -Path "$RegPath" -Name "SmoothMouseXCurve" -Type Binary -Value (([byte[]]$hexifiedX))
 Set-ItemProperty -Path "$RegPath" -Name "SmoothMouseYCurve" -Type Binary -Value (([byte[]]$hexifiedY))
 } elseif($checkscreenscale -eq "200") {
@@ -2857,8 +2885,8 @@ Write-Output "Windows screen scale is Detected as 200%, Applying Mouse Fix for i
 $YourInputX = "00,00,00,00,00,00,00,00,90,99,19,00,00,00,00,00,20,33,33,00,00,00,00,00,B0,CC,4C,00,00,00,00,00,40,66,66,00,00,00,00,00"
 $YourInputY = "00,00,00,00,00,00,00,00,00,00,38,00,00,00,00,00,00,00,70,00,00,00,00,00,00,00,A8,00,00,00,00,00,00,00,E0,00,00,00,00,00"
 $RegPath   = 'HKCU:\Control Panel\Mouse'
-$hexifiedX = $YourInputX.Split(',') | % { "0x$_"}
-$hexifiedY = $YourInputY.Split(',') | % { "0x$_"}
+$hexifiedX = $YourInputX.Split(',') | ForEach-Object { "0x$_"}
+$hexifiedY = $YourInputY.Split(',') | ForEach-Object { "0x$_"}
 Set-ItemProperty -Path "$RegPath" -Name "SmoothMouseXCurve" -Type Binary -Value (([byte[]]$hexifiedX))
 Set-ItemProperty -Path "$RegPath" -Name "SmoothMouseYCurve" -Type Binary -Value (([byte[]]$hexifiedY))
 } elseif($checkscreenscale -eq "225") {
@@ -2866,8 +2894,8 @@ Write-Output "Windows screen scale is Detected as 225%, Applying Mouse Fix for i
 $YourInputX = "00,00,00,00,00,00,00,00,C0,CC,1C,00,00,00,00,00,80,99,39,00,00,00,00,00,40,66,56,00,00,00,00,00,00,33,73,00,00,00,00,00"
 $YourInputY = "00,00,00,00,00,00,00,00,00,00,38,00,00,00,00,00,00,00,70,00,00,00,00,00,00,00,A8,00,00,00,00,00,00,00,E0,00,00,00,00,00"
 $RegPath   = 'HKCU:\Control Panel\Mouse'
-$hexifiedX = $YourInputX.Split(',') | % { "0x$_"}
-$hexifiedY = $YourInputY.Split(',') | % { "0x$_"}
+$hexifiedX = $YourInputX.Split(',') | ForEach-Object { "0x$_"}
+$hexifiedY = $YourInputY.Split(',') | ForEach-Object { "0x$_"}
 Set-ItemProperty -Path "$RegPath" -Name "SmoothMouseXCurve" -Type Binary -Value (([byte[]]$hexifiedX))
 Set-ItemProperty -Path "$RegPath" -Name "SmoothMouseYCurve" -Type Binary -Value (([byte[]]$hexifiedY))
 } elseif($checkscreenscale -eq "250") {
@@ -2875,8 +2903,8 @@ Write-Output "Windows screen scale is Detected as 250%, Applying Mouse Fix for i
 $YourInputX = "00,00,00,00,00,00,00,00,00,00,20,00,00,00,00,00,00,00,40,00,00,00,00,00,00,00,60,00,00,00,00,00,00,00,80,00,00,00,00,00"
 $YourInputY = "00,00,00,00,00,00,00,00,00,00,38,00,00,00,00,00,00,00,70,00,00,00,00,00,00,00,A8,00,00,00,00,00,00,00,E0,00,00,00,00,00"
 $RegPath   = 'HKCU:\Control Panel\Mouse'
-$hexifiedX = $YourInputX.Split(',') | % { "0x$_"}
-$hexifiedY = $YourInputY.Split(',') | % { "0x$_"}
+$hexifiedX = $YourInputX.Split(',') | ForEach-Object { "0x$_"}
+$hexifiedY = $YourInputY.Split(',') | ForEach-Object { "0x$_"}
 Set-ItemProperty -Path "$RegPath" -Name "SmoothMouseXCurve" -Type Binary -Value (([byte[]]$hexifiedX))
 Set-ItemProperty -Path "$RegPath" -Name "SmoothMouseYCurve" -Type Binary -Value (([byte[]]$hexifiedY))
 } elseif($checkscreenscale -eq "300") {
@@ -2884,8 +2912,8 @@ Write-Output "Windows screen scale is Detected as 300%, Applying Mouse Fix for i
 $YourInputX = "00,00,00,00,00,00,00,00,60,66,26,00,00,00,00,00,C0,CC,4C,00,00,00,00,00,20,33,73,00,00,00,00,00,80,99,99,00,00,00,00,00"
 $YourInputY = "00,00,00,00,00,00,00,00,00,00,38,00,00,00,00,00,00,00,70,00,00,00,00,00,00,00,A8,00,00,00,00,00,00,00,E0,00,00,00,00,00"
 $RegPath   = 'HKCU:\Control Panel\Mouse'
-$hexifiedX = $YourInputX.Split(',') | % { "0x$_"}
-$hexifiedY = $YourInputY.Split(',') | % { "0x$_"}
+$hexifiedX = $YourInputX.Split(',') | ForEach-Object { "0x$_"}
+$hexifiedY = $YourInputY.Split(',') | ForEach-Object { "0x$_"}
 Set-ItemProperty -Path "$RegPath" -Name "SmoothMouseXCurve" -Type Binary -Value (([byte[]]$hexifiedX))
 Set-ItemProperty -Path "$RegPath" -Name "SmoothMouseYCurve" -Type Binary -Value (([byte[]]$hexifiedY))
 } elseif($checkscreenscale -eq "350") {
@@ -2893,8 +2921,8 @@ Write-Output "Windows screen scale is Detected as 350%, Applying Mouse Fix for i
 $YourInputX = "00,00,00,00,00,00,00,00,C0,CC,2C,00,00,00,00,00,80,99,59,00,00,00,00,00,40,66,86,00,00,00,00,00,00,33,B3,00,00,00,00,00"
 $YourInputY = "00,00,00,00,00,00,00,00,00,00,38,00,00,00,00,00,00,00,70,00,00,00,00,00,00,00,A8,00,00,00,00,00,00,00,E0,00,00,00,00,00"
 $RegPath   = 'HKCU:\Control Panel\Mouse'
-$hexifiedX = $YourInputX.Split(',') | % { "0x$_"}
-$hexifiedY = $YourInputY.Split(',') | % { "0x$_"}
+$hexifiedX = $YourInputX.Split(',') | ForEach-Object { "0x$_"}
+$hexifiedY = $YourInputY.Split(',') | ForEach-Object { "0x$_"}
 Set-ItemProperty -Path "$RegPath" -Name "SmoothMouseXCurve" -Type Binary -Value (([byte[]]$hexifiedX))
 Set-ItemProperty -Path "$RegPath" -Name "SmoothMouseYCurve" -Type Binary -Value (([byte[]]$hexifiedY))
 } else {
@@ -2907,17 +2935,15 @@ Function DisableHPET {
         Write-Output "Disabling High Precision Event Timer..."
 	$errpref = $ErrorActionPreference #save actual preference
         $ErrorActionPreference = "silentlycontinue"
-        Invoke-WebRequest -Uri "https://git.io/JkrLn" -OutFile "$Env:windir\system32\SetTimerResolutionService.exe" -ErrorAction SilentlyContinue
-        New-Service -name "SetTimerResolutionService" -BinaryPathName "$Env:windir\system32\SetTimerResolutionService.exe" -StartupType Automatic | Out-Null -ErrorAction SilentlyContinue
         bcdedit /set x2apicpolicy Enable | Out-Null
         bcdedit /set configaccesspolicy Default | Out-Null
         bcdedit /set MSI Default | Out-Null
         bcdedit /set usephysicaldestination No | Out-Null
         bcdedit /set usefirmwarepcisettings No | Out-Null
 	bcdedit /deletevalue useplatformclock | Out-Null
-        bcdedit /set disabledynamictick yes | Out-Null
-        bcdedit /set useplatformtick Yes | Out-Null
-        bcdedit /set tscsyncpolicy Enhanced | Out-Null
+	bcdedit /deletevalue useplatformtick | Out-Null
+	bcdedit /deletevalue disabledynamictick | Out-Null
+	bcdedit /deletevalue tscsyncpolicy | Out-Null
 	bcdedit /timeout 10 | Out-Null
 	bcdedit /set nx optout | Out-Null
 	bcdedit /set bootux disabled | Out-Null
@@ -2925,7 +2951,14 @@ Function DisableHPET {
 	bcdedit /set {globalsettings} custom:16000067 true | Out-Null
 	bcdedit /set {globalsettings} custom:16000069 true | Out-Null
 	bcdedit /set {globalsettings} custom:16000068 true | Out-Null
-	wmic path Win32_PnPEntity where "name='High precision event timer'" call disable | Out-Null
+	wmic path Win32_PnPEntity where "name='High precision event timer'" call enable | Out-Null
+      if ($PlatformCheck -eq "Desktop") {
+     	Write-Output "Platform is $PlatformCheck disabling dynamic tick..."
+     	bcdedit /set disabledynamictick yes | Out-Null
+     } else {
+     	Write-Output "Platform is $PlatformCheck enabling dynamic tick..."
+     	bcdedit /set disabledynamictick no
+     }
 	$ErrorActionPreference = $errpref #restore previous preference
 }
 
@@ -2948,9 +2981,25 @@ Function EnableHAGS {
 #Add Utimate Power Plan And Activate It
 Function EnableUlimatePower {
 	Write-Output "Enabling and Activating Bitsum Highest Performance Power Plan..."
+	$powerSchemes = powercfg /l | ForEach-Object {
+    if ($_ -match '^Power Scheme GUID:\s*([-0-9a-f]+)\s*\(([^)]+)\)\s*(\*)?') {
+        [PsCustomObject]@{
+            GUID       = $matches[1]
+            SchemeName = $matches[2]
+            Active     = $matches[3] -eq '*'
+        }
+    }
+}
+	$customScheme = ($powerSchemes | Where-Object { $_.SchemeName -eq 'Bitsum Highest Performance' }).GUID
+ 	if ($customScheme -eq 'e6a66b66-d6df-666d-aa66-66f66666eb66') {
+  	Write-Output "Power Plan already exist! setting it as active..."
+   	powercfg -setactive e6a66b66-d6df-666d-aa66-66f66666eb66 | Out-Null
+    } else {
+	Write-Output "Enabling and Activating Bitsum Highest Performance Power Plan..."
 	Invoke-WebRequest -Uri "https://git.io/JsWhn" -OutFile "$Env:windir\system32\Bitsum-Highest-Performance.pow" -ErrorAction SilentlyContinue
 	powercfg -import "$Env:windir\system32\Bitsum-Highest-Performance.pow" e6a66b66-d6df-666d-aa66-66f66666eb66 | Out-Null
 	powercfg -setactive e6a66b66-d6df-666d-aa66-66f66666eb66 | Out-Null
+ }
 }
 
 #Disable Core Parking on current PowerPlan Ultimate Performance
@@ -2958,6 +3007,10 @@ Function DisableCoreParking {
         Write-Output "Disabling Core Parking on current PowerPlan Ultimate Performance..."
 	powercfg -attributes SUB_PROCESSOR CPMINCORES -ATTRIB_HIDE | Out-Null
 	Powercfg -setacvalueindex scheme_current sub_processor CPMINCORES 100 | Out-Null
+ 	powercfg /setacvalueindex scheme_current 2a737441-1930-4402-8d77-b2bebba308a3 d4e98f31-5ffe-4ce1-be31-1b38b384c009 0 | Out-Null
+  	powercfg /setacvalueindex scheme_current 2a737441-1930-4402-8d77-b2bebba308a3 48e6b7a6-50f5-4782-a5d4-53bb8f07e226 0 | Out-Null
+   	powercfg /setacvalueindex scheme_current 7516b95f-f776-4464-8c53-06167f40cc99 3c0bc021-c8a8-4e07-a973-6b14cbcb2b7e 0 | Out-Null
+    	powercfg /setacvalueindex scheme_current 54533251-82be-4824-96c1-47b60b740d00 4d2b0152-7d5c-498b-88e2-34345392a2c5 5000 | Out-Null
 	Powercfg -setactive scheme_current | Out-Null
 }
 
@@ -2968,11 +3021,18 @@ Function DisableDMA {
         $ErrorActionPreference = "silentlycontinue"
         bcdedit /set vsmlaunchtype Off | Out-Null
         bcdedit /set vm No | Out-Null
+	bcdedit /set loadoptions DISABLE-LSA-ISO,DISABLE-VBS | Out-Null
         New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\FVE" | Out-Null -ErrorAction SilentlyContinue
         Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\FVE" -Name "DisableExternalDMAUnderLock" -Type DWord -Value 0
         New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeviceGuard" | Out-Null -ErrorAction SilentlyContinue
         Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeviceGuard" -Name "EnableVirtualizationBasedSecurity" -Type DWord -Value 0
         Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeviceGuard" -Name "HVCIMATRequired" -Type DWord -Value 0
+	Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeviceGuard" -Name "RequirePlatformSecurityFeatures" -Type DWord -Value 0
+ 	Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeviceGuard" -Name "LsaCfgFlags" -Type DWord -Value 0
+	Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" -Name "LsaCfgFlags" -Type DWord -Value 0
+ 	Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\DeviceGuard" -Name "EnableVirtualizationBasedSecurity" -Type DWord -Value 0
+  	Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\DeviceGuard" -Name "HVCIMATRequired" -Type DWord -Value 0
+   	Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\DeviceGuard" -Name "RequirePlatformSecurityFeatures" -Type DWord -Value 0
 	$ErrorActionPreference = $errpref #restore previous preference
 }
 
@@ -3055,9 +3115,9 @@ Function DecreaseMKBuffer {
        $errpref = $ErrorActionPreference #save actual preference
        $ErrorActionPreference = "silentlycontinue"
        New-Item -Path "HKLM:\SYSTEM\CurrentControlSet\Services\mouclass\Parameters" | Out-Null -ErrorAction SilentlyContinue
-       Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\mouclass\Parameters" -Name "MouseDataQueueSize" -Type DWord -Value 0x00000010
+       Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\mouclass\Parameters" -Name "MouseDataQueueSize" -Type DWord -Value 0x00000032
        New-Item -Path "HKLM:\SYSTEM\CurrentControlSet\Services\kbdclass\Parameters" | Out-Null -ErrorAction SilentlyContinue
-       Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\kbdclass\Parameters" -Name "KeyboardDataQueueSize" -Type DWord -Value 0x00000010
+       Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\kbdclass\Parameters" -Name "KeyboardDataQueueSize" -Type DWord -Value 0x00000032
        $ErrorActionPreference = $errpref #restore previous preference
 }
 
@@ -3289,6 +3349,8 @@ Function NetworkOptimizations {
        Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\MSMQ\Parameters" -Name "TCPNoDelay" -Type DWord -Value 1
        Set-ItemProperty -Path "HKLM:\SYSTEM\ControlSet001\Control\Lsa" -Name "LmCompatibilityLevel" -Type DWord -Value 1
        Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\Dnscache\Parameters" -Name "EnableAutoDoh" -Type DWord -Value 2
+       Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" -Name "MaxNumRssCpus" -Type DWord -Value 4
+       Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" -Name "DisableTaskOffload" -Type DWord -Value 0
        Set-NetTCPSetting -SettingName internet -EcnCapability disabled | Out-Null
        Set-NetOffloadGlobalSetting -Chimney disabled | Out-Null
        Set-NetTCPSetting -SettingName internet -Timestamps disabled | Out-Null
@@ -3299,10 +3361,12 @@ Function NetworkOptimizations {
        Set-NetTCPSetting -SettingName Internet -AutoTuningLevelLocal normal | Out-Null
        Set-NetTCPSetting -SettingName internet -ScalingHeuristics disabled | Out-Null
        netsh int tcp set supplemental internet congestionprovider=ctcp | Out-Null
-       Set-NetOffloadGlobalSetting -ReceiveSegmentCoalescing enabled | Out-Null
+       netsh int tcp set global rss=enabled | Out-Null
+       netsh int ip set global taskoffload=enabled | Out-Null
+       Set-NetOffloadGlobalSetting -ReceiveSegmentCoalescing disabled | Out-Null
        Set-NetOffloadGlobalSetting -ReceiveSideScaling enabled | Out-Null
        Disable-NetAdapterLso -Name * | Out-Null
-       Disable-NetAdapterChecksumOffload -Name * | Out-Null
+       Enable-NetAdapterChecksumOffload -Name * | Out-Null
        Set-NetAdapterAdvancedProperty -Name * -DisplayName "Energy-Efficient Ethernet" -DisplayValue "Disabled" -ErrorAction SilentlyContinue
        Set-NetAdapterAdvancedProperty -Name * -DisplayName "Energy Efficient Ethernet" -DisplayValue "Disabled" -ErrorAction SilentlyContinue
        Set-NetAdapterAdvancedProperty -Name * -DisplayName "Energy Efficient Ethernet" -DisplayValue "Off" -ErrorAction SilentlyContinue
@@ -3315,11 +3379,26 @@ Function NetworkOptimizations {
        Set-NetAdapterAdvancedProperty -Name * -DisplayName "Advanced EEE" -DisplayValue "Disabled" -ErrorAction SilentlyContinue
        Set-NetAdapterAdvancedProperty -Name * -DisplayName "ARP Offload" -DisplayValue "Disabled" -ErrorAction SilentlyContinue
        Set-NetAdapterAdvancedProperty -Name * -DisplayName "NS Offload" -DisplayValue "Disabled" -ErrorAction SilentlyContinue
+       Set-NetAdapterAdvancedProperty -Name * -DisplayName "Large Send Offload v2 (IPv4)" -DisplayValue "Disabled" -ErrorAction SilentlyContinue
+       Set-NetAdapterAdvancedProperty -Name * -DisplayName "Large Send Offload v2 (IPv6)" -DisplayValue "Disabled" -ErrorAction SilentlyContinue
+       Set-NetAdapterAdvancedProperty -Name * -DisplayName "TCP Checksum Offload (IPv4)" -DisplayValue "Disabled" -ErrorAction SilentlyContinue
+       Set-NetAdapterAdvancedProperty -Name * -DisplayName "TCP Checksum Offload (IPv6)" -DisplayValue "Disabled" -ErrorAction SilentlyContinue
+       Set-NetAdapterAdvancedProperty -Name * -DisplayName "UDP Checksum Offload (IPv4)" -DisplayValue "Disabled" -ErrorAction SilentlyContinue
+       Set-NetAdapterAdvancedProperty -Name * -DisplayName "UDP Checksum Offload (IPv6)" -DisplayValue "Disabled" -ErrorAction SilentlyContinue
        Set-NetAdapterAdvancedProperty -Name * -DisplayName "Idle Power Saving" -DisplayValue "Disabled" -ErrorAction SilentlyContinue
-       Set-NetAdapterAdvancedProperty -Name * -DisplayName "Flow Control" -DisplayValue "Disabled" -ErrorAction SilentlyContinue
+       Set-NetAdapterAdvancedProperty -Name * -DisplayName "Flow Control" -DisplayValue "Enabled" -ErrorAction SilentlyContinue
+       Set-NetAdapterAdvancedProperty -Name * -DisplayName "Flow Control" -DisplayValue "Rx & Tx Enabled" -ErrorAction SilentlyContinue
        Set-NetAdapterAdvancedProperty -Name * -DisplayName "Interrupt Moderation" -DisplayValue "Disabled" -ErrorAction SilentlyContinue
        Set-NetAdapterAdvancedProperty -Name * -DisplayName "Reduce Speed On Power Down" -DisplayValue "Disabled" -ErrorAction SilentlyContinue
        Set-NetAdapterAdvancedProperty -Name * -DisplayName "Interrupt Moderation Rate" -DisplayValue "Off" -ErrorAction SilentlyContinue
+       Set-NetAdapterAdvancedProperty -Name * -DisplayName "Log Link State Event" -DisplayValue "Disabled" -ErrorAction SilentlyContinue
+       Set-NetAdapterAdvancedProperty -Name * -DisplayName "Packet Priority & VLAN" -DisplayValue "Disabled" -ErrorAction SilentlyContinue
+       Set-NetAdapterAdvancedProperty -Name * -DisplayName "Packet Priority & VLAN" -DisplayValue "Packet Priority & VLAN Disabled" -ErrorAction SilentlyContinue
+       Set-NetAdapterAdvancedProperty -Name * -DisplayName "Priority & VLAN" -DisplayValue "Priority & VLAN Disabled" -ErrorAction SilentlyContinue
+       Set-NetAdapterAdvancedProperty -Name * -DisplayName "IPv4 Checksum Offload" -DisplayValue "Rx & Tx Enabled" -ErrorAction SilentlyContinue
+       Set-NetAdapterAdvancedProperty -Name * -DisplayName "Jumbo Frame" -DisplayValue "Disabled" -ErrorAction SilentlyContinue
+       Set-NetAdapterAdvancedProperty -Name * -DisplayName "Maximum Number of RSS Queues" -DisplayValue "2 Queues" -ErrorAction SilentlyContinue
+       Set-NetAdapterAdvancedProperty -Name * -DisplayName "Receive Side Scaling" -DisplayValue "Enabled" -ErrorAction SilentlyContinue
        $ErrorActionPreference = $errpref #restore previous preference
        if ((Get-CimInstance -ClassName Win32_ComputerSystem).PCSystemType -ne 2)
 {
@@ -3346,6 +3425,73 @@ Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters
 Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\$NetworkID" -Name "TCPNoDelay" -Type DWord -Value 1
 }
 $ErrorActionPreference = $errpref #restore previous preference
+}
+
+#setting network adabter optimal rss
+Function NetworkAdapterRSS {
+$errpref = $ErrorActionPreference #save actual preference
+$ErrorActionPreference = "silentlycontinue"
+Write-Output "Setting network adapter RSS..."
+	$PhysicalAdapters = Get-WmiObject -Class Win32_NetworkAdapter|Where-Object{$_.PNPDeviceID -notlike "ROOT\*" -and $_.Manufacturer -ne "Microsoft" -and $_.ConfigManagerErrorCode -eq 0 -and $_.ConfigManagerErrorCode -ne 22}
+	
+	Foreach($PhysicalAdapter in $PhysicalAdapters)
+	{
+		# $PhysicalAdapterName = $PhysicalAdapter.Name
+		$DeviceID = $PhysicalAdapter.DeviceID
+		If([Int32]$DeviceID -lt 10)
+		{
+			$AdapterDeviceNumber = "000"+$DeviceID
+		}
+		Else
+		{
+			$AdapterDeviceNumber = "00"+$DeviceID
+		}
+		$KeyPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002bE10318}\$AdapterDeviceNumber"
+		$KeyPath2 = "HKLM:\SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002bE10318}\$AdapterDeviceNumber\Ndi\params\*RSS\Enum"
+		$KeyPath3 = "HKLM:\SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002bE10318}\$AdapterDeviceNumber\Ndi\params\*RSS"
+		$KeyPath4 = "HKLM:\SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002bE10318}\$AdapterDeviceNumber\Ndi\params\*NumRssQueues\Enum"
+		$KeyPath5 = "HKLM:\SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002bE10318}\$AdapterDeviceNumber\Ndi\params\*NumRssQueues"
+		$KeyPath6 = "HKLM:\SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002bE10318}\$AdapterDeviceNumber\Ndi\params\*ReceiveBuffers"
+		$KeyPath7 = "HKLM:\SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002bE10318}\$AdapterDeviceNumber\Ndi\params\*TransmitBuffers"
+		
+		If(Test-Path -Path $KeyPath)
+			{
+					new-Item -Path $KeyPath2 -Force | Out-Null
+					new-Item -Path $KeyPath4 -Force | Out-Null
+					Set-ItemProperty -Path $KeyPath -Name "*NumRssQueues" -Type String -Value 2 | Out-Null
+					Set-ItemProperty -Path $KeyPath -Name "*RSS" -Type String -Value 1 | Out-Null
+					Set-ItemProperty -Path $KeyPath -Name "*RSSProfile" -Type String -Value 4 | Out-Null
+					Set-ItemProperty -Path $KeyPath -Name "*RssBaseProcNumber" -Type String -Value 2 | Out-Null
+					Set-ItemProperty -Path $KeyPath -Name "*MaxRssProcessors" -Type String -Value 4 | Out-Null
+					Set-ItemProperty -Path $KeyPath -Name "*NumaNodeId" -Type String -Value 0 | Out-Null
+					Set-ItemProperty -Path $KeyPath -Name "*RssBaseProcGroup" -Type String -Value 0 | Out-Null
+					Set-ItemProperty -Path $KeyPath -Name "*RssMaxProcNumber" -Type String -Value 4 | Out-Null
+					Set-ItemProperty -Path $KeyPath -Name "*RssMaxProcGroup" -Type String -Value 0 | Out-Null
+					Set-ItemProperty -Path $KeyPath -Name "*ReceiveBuffers" -Type String -Value 2048 | Out-Null
+					Set-ItemProperty -Path $KeyPath -Name "*TransmitBuffers" -Type String -Value 4096 | Out-Null
+					New-ItemProperty -Path $KeyPath3 -Name "default" -Type String -Value 1 | Out-Null
+					New-ItemProperty -Path $KeyPath3 -Name "ParamDesc" -Type String -Value "Receive Side Scaling" | Out-Null
+					New-ItemProperty -Path $KeyPath3 -Name "type" -Type String -Value "enum" | Out-Null
+					New-ItemProperty -Path $KeyPath2 -Name "0" -Type String -Value "Disabled" | Out-Null
+					New-ItemProperty -Path $KeyPath2 -Name "1" -Type String -Value "Enabled" | Out-Null
+					New-ItemProperty -Path $KeyPath4 -Name "1" -Type String -Value "1 Queue" | Out-Null
+					New-ItemProperty -Path $KeyPath4 -Name "2" -Type String -Value "2 Queue" | Out-Null
+					New-ItemProperty -Path $KeyPath4 -Name "3" -Type String -Value "3 Queue" | Out-Null
+					New-ItemProperty -Path $KeyPath4 -Name "4" -Type String -Value "4 Queue" | Out-Null
+					New-ItemProperty -Path $KeyPath5 -Name "default" -Type String -Value "2" | Out-Null
+					New-ItemProperty -Path $KeyPath5 -Name "ParamDesc" -Type String -Value "Maximum Number of RSS Queues" | Out-Null
+					New-ItemProperty -Path $KeyPath5 -Name "type" -Type String -Value "enum" | Out-Null
+					Set-ItemProperty -Path $KeyPath6 -Name "Max" -Type String -Value 6144 | Out-Null
+					Set-ItemProperty -Path $KeyPath6 -Name "Default" -Type String -Value 2048 | Out-Null
+					Set-ItemProperty -Path $KeyPath7 -Name "Max" -Type String -Value 6144 | Out-Null
+					Set-ItemProperty -Path $KeyPath7 -Name "Default" -Type String -Value 4096 | Out-Null
+		}
+				Else
+		{
+			Write-Host "The path ($KeyPath) not found."
+		}
+	}
+ $ErrorActionPreference = $errpref #restore previous preference
 }
 
 #Remove Edit with 3D Paint
@@ -3401,7 +3547,7 @@ cmd /c 'del /f /q %userprofile%\recent\*.* 2>nul' >$null
 cmd /c 'del /f /s /q %userprofile%\Local Settings\Temporary Internet Files\*.* 2>nul' >$null
 $errpref = $ErrorActionPreference #save actual preference
 $ErrorActionPreference = "silentlycontinue"
-Get-ChildItem -Path "$env:temp" -Exclude "dmtmp" | foreach ($_) {
+Get-ChildItem -Path "$env:temp" -Exclude "dmtmp" | ForEach-Object ($_) {
        "CLEANING :" + $_.fullname
        Remove-Item $_.fullname -Force -Recurse
        "CLEANED... :" + $_.fullname
@@ -3419,10 +3565,10 @@ Function Finished {
 	Set-ItemProperty -Path "HKCR:\Msi.Package\shell\runas\command" -Name "(Default)" -Type ExpandString -Value '"%SystemRoot%\System32\msiexec.exe" /i "%1" %*' | Out-Null -ErrorAction SilentlyContinue
 	Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\System" -Name "AllowClipboardHistory" -Type DWord -Value 1
         cmd /c 'REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\OEMInformation" /v "Manufacturer" /t REG_SZ /d "This PC is Optimized by DaddyMadu" /f 2>nul' >$null
-        cmd /c 'REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\OEMInformation" /v "SupportURL" /t REG_SZ /d "http://daddymadu.gg" /f 2>nul' >$null
+        cmd /c 'REG ADD "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\OEMInformation" /v "SupportURL" /t REG_SZ /d "https://madu.gg" /f 2>nul' >$null
 	Start-Sleep -s 5
         Write-Output "Done! Please Reboot Your PC! Don't forget to follow me on Social Media."
-        Start "http://daddymadu.gg"
+        Start-Process "https://madu.gg"
 }
 
 ##########
@@ -3432,7 +3578,7 @@ Function Finished {
 # Relaunch the script with administrator privileges
 Function RequireAdmin {
 	If (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-		Start-Process powershell.exe "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`" $PSCommandArgs" -WorkingDirectory $pwd -Verb RunAs
+		Start-Process Powershell -Argumentlist '-ExecutionPolicy bypass -NoProfile -command "irm "https://github.com/DaddyMadu/Windows10GamingFocus/raw/master/win10debloatandgamingtweaks.ps1" | iex"' -Verb RunAs
 		Exit
 	}
 }
@@ -3487,8 +3633,8 @@ $FileAssoc = Get-ItemProperty $FileAssocKey
 $URLAssoc = Get-ItemProperty $URLAssocKey 
  
 $Associations = @() 
-$Filetypes.Property | foreach {$Associations += $FileAssoc.$_} 
-$URLTypes.Property | foreach {$Associations += $URLAssoc.$_} 
+$Filetypes.Property | ForEach-Object {$Associations += $FileAssoc.$_} 
+$URLTypes.Property | ForEach-Object {$Associations += $URLAssoc.$_} 
  
 # add registry values in each software class to stop edge from associating as the default 
 foreach ($Association in $Associations) 
@@ -3519,7 +3665,7 @@ Function CreateRestorePoint {
 # Remove-Item -Path C:\Mnt -Recurse
 
 Function DebloatAll {
-cls
+Clear-Host
     $Bloatware = @(
     #Unnecessary Windows 10 AppX Apps
     "*3DBuilder*"
@@ -3550,7 +3696,6 @@ cls
     "*WindowsAlarms*"
     "*WindowsFeedbackHub*"
     "*WindowsMaps*"
-    "*WindowsPhone*"
     "*WindowsSoundRecorder*"
     "*MicrosoftOfficeHub*"
     "*MixedReality.Portal*"
@@ -3560,7 +3705,6 @@ cls
     "Microsoft.549981C3F5F10"
     "*Advertising.Xaml*"
     "*SolitaireCollection*"
-    "*YourPhone*"
 		
         #Sponsored Windows 10 AppX Apps
         #Add sponsored/featured apps to remove in the "*AppName*" format
@@ -3631,9 +3775,9 @@ If ($args -And $args[0].ToLower() -eq "-preset") {
 If ($args) {
 	$tweaks = $args
 	If ($preset) {
-		$tweaks = Get-Content $preset -ErrorAction Stop | ForEach { $_.Trim() } | Where { $_ -ne "" -and $_[0] -ne "#" }
+		$tweaks = Get-Content $preset -ErrorAction Stop | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" -and $_[0] -ne "#" }
 	}
 }
 
 # Call the desired tweak functions
-$tweaks | ForEach { Invoke-Expression $_ }
+$tweaks | ForEach-Object { Invoke-Expression $_ }
